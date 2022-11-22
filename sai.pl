@@ -15,11 +15,31 @@ load_board(BoardFileName, Board):-
 % the stone located at (Row, Column) is alive or dead.
 
 check_alive(Row, Column, BoardFileName):-
-    load_board(BoardFileName, Board),
-    check_piece_exist(Row, Column, Board).
+    load_board(BoardFileName, Board), % Board == board2darray
+    check_piece_exist(Row, Column, Board, Stone),
+    \+ check_piece_up(Row, Column, Board, Stone).
 
-check_piece_exist(Row, Column, Board):-
+check_piece_exist(Row, Column, Board, Stone):-
     nth1_2d(Row, Column, Board, Stone),
     (Stone = b; Stone = w).
 
-check_pieces_around(Row, Column).
+testing(Row, Column, BoardFileName, AboveStone):-
+    load_board(BoardFileName, Board), % Board == board2darray
+    NewRow is Row - 1,
+    nth1_2d(NewRow, Column, Board, AboveStone).
+
+% false if piece above is e or same as stonecolor
+check_piece_up(Row, Column, Board, Stone):- % Stone == b
+    NewRow is Row - 1,
+    nth1_2d(NewRow, Column, Board, AboveStone), % AboveStone == e, true
+    \+ ((AboveStone = Stone); AboveStone = e). % checking !(stone == abovestone || e == e), false
+  % if any of the above is false,
+
+% map_allies_around(Row, Column, Board, Stone):-
+%     UpRow is Row - 1,
+%     DownRow is Row + 1,
+%     LeftColumn is Column -1,
+%     RightColumn is Column + 1.
+
+is_same_or_e(Stone, AboveStone):-
+    \+ ((AboveStone = Stone); AboveStone = e).
