@@ -23,9 +23,9 @@ get_piece_exist(Row, Column, Board, Stone):-
     nth1_2d(Row, Column, Board, Stone),
     (Stone = b; Stone = w).
 
-testing(Row, Column, BoardFileName, CheckList):-
-    load_board(BoardFileName, Board), % Board == board2darray
-    map_allies_around(Row, Column, Board, CheckList).
+% testing(Row, Column, BoardFileName, CheckList):-
+%     load_board(BoardFileName, Board), % Board == board2darray
+%     map_allies_around(Row, Column, Board, CheckList).
 
 % % true if row column is ok, and returns t'he stone above
 % check_up(Up, Column, Board, AboveStone):-'
@@ -58,67 +58,36 @@ testing(Row, Column, BoardFileName, CheckList):-
 %             Left is Column - 1,
 
 %     )
-    
+
+% returns false, if no escape,
+% return true, if has escape and alive
 map_allies_around(Row, Column, Board, AllyStone, CheckList):-
     Up is Row - 1,
     Right is Column + 1,
     Down is Row + 1,
     Left is Column - 1,
 
-    Right < 10,
+    Right < 10, % if position is out of bounds that position is enemy color(no escape)
     Down < 10,
 
     nth1_2d(Row, Column, Board, Stone),
-    (Stone = e;
-        (
-            Stone = AllyStone,
-            (\+ is_member([Row, Column], CheckList)),
-            (
-                map_allies_around(Up, Column, Stone, [ [Row, Column] | CheckList]);
-                map_allies_around(Row, Right, Stone, [ [Row, Column] | CheckList]);
-                map_allies_around(Down, Column, Stone, [ [Row, Column] | CheckList]);
-                map_allies_around(Up, Left, Stone, [ [Row, Column] | CheckList])
+    format('~w ~46t ~w ~46t ~w ~46t ~n', [Row, Column, Stone]),
+    (
+        Stone = e;                                                          % if stone is e, it has an escape and return true.
+        (Stone = AllyStone, (\+ is_member([Row, Column], CheckList)),       % else if stone is ally and pos has not been checked
+            (                                                               % and any of the allies around has an empty near, then it has escape so return true.
+                map_allies_around(Up, Column, Board, AllyStone, [[Row, Column]| CheckList]);
+                map_allies_around(Row, Right, Board, AllyStone, [[Row, Column]| CheckList]);
+                map_allies_around(Down, Column, Board, AllyStone, [[Row, Column]| CheckList]);
+                map_allies_around(Row, Left, Board, AllyStone, [[Row, Column]| CheckList])
             )
         )
     ).
-    % ( (/+ is_member([Row, Column], CheckList)) ->
-    %     add_tail(CheckList, [Row, Column], NewCheckList);
-    %     NewCheckList is CheckList
-    % ),
-
-    % nth1_2d(Up, Column, Board, AboveStone),
-    % nth1_2d(Row, Right, Board, RightStone),
-    % nth1_2d(Down, Column, Board, DownStone),
-    % nth1_2d(Row, Left, Board, LeftStone),
-    % (
-    % (AboveStone = Stone, (/+ is_member([Up, Column], NewCheckList)))  ->  % if the stone above is same as stone
-    %     map_allies_around(Up, Column, Board, NewCheckList);
-    %     AboveStone = e -> !
-    % ),
-    % RightStone = Stone, (/+ is_member([Row, Right], NewCheckList)) -> (
-    %     map_allies_around(Row, Right, Board, NewCheckList);
-    %     RightStone = e -> !
-    % ),
-
-    % DownStone = Stone, (/+ is_member([Down, Column], NewCheckList)) -> (
-    %     map_allies_around(Down, Column, Board, NewCheckList);
-    %     DownStone = e -> !
-    % ),
-
-    % LeftStone = Stone, (/+ is_member([Row, Left], NewCheckList)) -> (
-    %     map_allies_around(Row, Left, Board, NewCheckList);
-    %     LeftStone = e -> !
-    % )
-    % .
 
 
 is_member(X, [X | _]) :- !.    % If the head of the list is X from: https://www.geeksforgeeks.org/lists-in-prolog/
 is_member(X, [_ | Rest]) :-    % else recur for the rest of the list
      is_member(X, Rest).
-
-add_tail([],X,[X]). %  from: https://stackoverflow.com/questions/15028831/how-do-you-append-an-element-to-a-list-in-place-in-prolog
-add_tail([H|T],X,[H|L]):-
-    add_tail(T,X,L).
 
 is_same_or_e(Stone, AboveStone):-
     \+ ((AboveStone = Stone); AboveStone = e).
