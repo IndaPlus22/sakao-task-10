@@ -16,21 +16,19 @@ load_board(BoardFileName, Board):-
 
 check_alive(Row, Column, BoardFileName):-
     load_board(BoardFileName, Board), % Board == board2darray
-    map_allies_around(Row, Column, Board, []).
+    get_piece_exist(Row, Column, Board, Stone),
+    map_allies_around(Row, Column, Board, Stone, []).
 
-% check_piece_exist(Row, Column, Board, Stone):-
-%     nth1_2d(Row, Column, Board, Stone),
-%     (Stone = b; Stone = w).
+get_piece_exist(Row, Column, Board, Stone):-
+    nth1_2d(Row, Column, Board, Stone),
+    (Stone = b; Stone = w).
 
-testing(Row, Column, BoardFileName, AboveStone):-
+testing(Row, Column, BoardFileName, CheckList):-
     load_board(BoardFileName, Board), % Board == board2darray
-    NewRow is Row - 1,
-    nth1_2d(NewRow, Column, Board, AboveStone).
+    map_allies_around(Row, Column, Board, CheckList).
 
-% true if row column is ok, and returns the stone above
-% check_piece_up(Row, Column, Board, Stone, AboveStone):-
-%     NewRow is Row - 1,
-%     nth1_2d(NewRow, Column, Board, AboveStone).
+% % true if row column is ok, and returns t'he stone above
+% check_up(Up, Column, Board, AboveStone):-'
 
 % check_piece_down(Row, Column, Board, Stone, AboveStone):-
 %     NewRow is Row + 1,
@@ -46,35 +44,72 @@ testing(Row, Column, BoardFileName, AboveStone):-
 %     nth1_2d(Row, NewColumn, Board, AboveStone).
 
 
-% return true when piece is not dead (has empty)
-map_allies_around(Row, Column, Board, CheckList):-
-    nth1_2d(Row, Column, Board, Stone),
-    add_tail(CheckList, [Row, Column], NewCheckList),
+% check_current(Row, Column, Board, AllyStone, CheckList):-
+%     Column < 10,
+%     Row < 10,
 
+%     nth1_2d(Row, Column, Board, Stone),
+%     (
+%         Stone = e -> !;
+%         Stone = AllyStone ->
+%             Up is Row - 1,
+%             Right is Column + 1,
+%             Down is Row + 1,
+%             Left is Column - 1,
+
+%     )
+    
+map_allies_around(Row, Column, Board, AllyStone, CheckList):-
     Up is Row - 1,
-    nth1_2d(Up, Column, Board, AboveStone),
-    AboveStone = Stone -> (
-        map_allies_around(Up, Column, Board, NewCheckList);
-        AboveStone = e -> !
-    ),
     Right is Column + 1,
-    nth1_2d(Row, Right, Board, RightStone),
-    RightStone = Stone -> (
-        map_allies_around(Row, Right, Board, NewCheckList);
-        RightStone = e -> !
-    ),
     Down is Row + 1,
-    nth1_2d(Down, Column, Board, DownStone),
-    DownStone = Stone -> (
-        map_allies_around(Down, Column, Board, NewCheckList);
-        DownStone = e -> !
-    ),
     Left is Column - 1,
-    nth1_2d(Row, Left, Board, LeftStone),
-    LeftStone = Stone -> (
-        map_allies_around(Row, Left, Board, NewCheckList);
-        LeftStone = e -> !
+
+    Right < 10,
+    Down < 10,
+
+    nth1_2d(Row, Column, Board, Stone),
+    (Stone = e;
+        (
+            Stone = AllyStone,
+            (\+ is_member([Row, Column], CheckList)),
+            (
+                map_allies_around(Up, Column, Stone, [ [Row, Column] | CheckList]);
+                map_allies_around(Row, Right, Stone, [ [Row, Column] | CheckList]);
+                map_allies_around(Down, Column, Stone, [ [Row, Column] | CheckList]);
+                map_allies_around(Up, Left, Stone, [ [Row, Column] | CheckList])
+            )
+        )
     ).
+    % ( (/+ is_member([Row, Column], CheckList)) ->
+    %     add_tail(CheckList, [Row, Column], NewCheckList);
+    %     NewCheckList is CheckList
+    % ),
+
+    % nth1_2d(Up, Column, Board, AboveStone),
+    % nth1_2d(Row, Right, Board, RightStone),
+    % nth1_2d(Down, Column, Board, DownStone),
+    % nth1_2d(Row, Left, Board, LeftStone),
+    % (
+    % (AboveStone = Stone, (/+ is_member([Up, Column], NewCheckList)))  ->  % if the stone above is same as stone
+    %     map_allies_around(Up, Column, Board, NewCheckList);
+    %     AboveStone = e -> !
+    % ),
+    % RightStone = Stone, (/+ is_member([Row, Right], NewCheckList)) -> (
+    %     map_allies_around(Row, Right, Board, NewCheckList);
+    %     RightStone = e -> !
+    % ),
+
+    % DownStone = Stone, (/+ is_member([Down, Column], NewCheckList)) -> (
+    %     map_allies_around(Down, Column, Board, NewCheckList);
+    %     DownStone = e -> !
+    % ),
+
+    % LeftStone = Stone, (/+ is_member([Row, Left], NewCheckList)) -> (
+    %     map_allies_around(Row, Left, Board, NewCheckList);
+    %     LeftStone = e -> !
+    % )
+    % .
 
 
 is_member(X, [X | _]) :- !.    % If the head of the list is X from: https://www.geeksforgeeks.org/lists-in-prolog/
